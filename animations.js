@@ -88,3 +88,32 @@ const Motion = (() => {
 
   return { init };
 })();
+
+/* ---------- Footer upgrade: neon Donate button, separate Privacy column, moving "MADE BY YASH" ticker ---------- */
+(() => {
+  const build = () => {
+    const footer = document.querySelector('.footer');
+    if (footer && !footer.dataset.upgraded) {
+      footer.dataset.upgraded = '1';
+      const portal = [...footer.querySelectorAll(':scope > div')]
+        .find(d => (d.querySelector('b') || {}).textContent?.trim() === 'PORTAL');
+      if (portal) {
+        portal.innerHTML = '<b>PORTAL</b><p><a class="neon-btn" href="contact.html">Donate / support</a></p>';
+        const legal = document.createElement('div');
+        legal.className = 'footer-legal';
+        legal.innerHTML = '<b>LEGAL</b><p><a class="footer-btn" href="privacy.html">Privacy Policy</a></p>';
+        portal.after(legal);
+      }
+    }
+    if (!document.querySelector('.made-by-ticker')) {
+      const item = '<span>MADE BY YASH</span><i>✦</i>';
+      const group = `<div class="made-by-group">${item.repeat(16)}</div>`;
+      const ticker = document.createElement('div');
+      ticker.className = 'made-by-ticker';
+      ticker.setAttribute('aria-label', 'Made by Yash');
+      ticker.innerHTML = `<div class="made-by-track">${group}${group}</div>`;
+      if (footer) footer.after(ticker); else document.body.append(ticker);
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
