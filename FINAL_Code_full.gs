@@ -36,6 +36,14 @@ const LECTURE_HEADERS = [
   'Status'
 ];
 
+// Quiz sheet (dynamic list, same pattern as lecture sheets)
+const QUIZ_SHEET_NAME = 'QUIZZES';
+const QUIZ_HEADERS = [
+  'Quiz Name',
+  'Link',
+  'Status'
+];
+
 const SETTINGS_HEADERS = [
   'Setting',
   'Value'
@@ -109,6 +117,16 @@ function setupLecturesSystem() {
   }
 
   setupLogSheet_(logSheet);
+
+
+  // QUIZZES
+  let quizSheet = ss.getSheetByName(QUIZ_SHEET_NAME);
+
+  if (!quizSheet) {
+    quizSheet = ss.insertSheet(QUIZ_SHEET_NAME);
+  }
+
+  setupQuizSheet_(quizSheet);
 
 
   // Freeze first row
@@ -265,6 +283,40 @@ function setupLogSheet_(sheet) {
 
 
 /***********************
+ * QUIZ SHEET SETUP
+ ***********************/
+
+function setupQuizSheet_(sheet) {
+
+  if (sheet.getLastRow() === 0) {
+    sheet
+      .getRange(1, 1, 1, QUIZ_HEADERS.length)
+      .setValues([QUIZ_HEADERS]);
+  }
+
+  formatHeader_(sheet, QUIZ_HEADERS.length);
+
+  sheet.setColumnWidth(1, 260);
+  sheet.setColumnWidth(2, 420);
+  sheet.setColumnWidth(3, 130);
+
+  const maxRows = Math.max(sheet.getMaxRows(), 1000);
+
+  const statusRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(
+      ['LIVE', 'ARCHIVED'],
+      true
+    )
+    .setAllowInvalid(true)
+    .build();
+
+  sheet
+    .getRange(2, 3, maxRows - 1, 1)
+    .setDataValidation(statusRule);
+}
+
+
+/***********************
  * HEADER FORMAT
  ***********************/
 
@@ -303,6 +355,9 @@ function doGet(e) {
 
       case 'allLectures':
         return json_(getAllLectures_());
+
+      case 'quizzes':
+        return json_(getQuizzes_());
 
       case 'settings':
         return json_(getSettings_());
@@ -621,6 +676,66 @@ function extractLinkColumn_(sheet, startRow, numRows, colIndex) {
   }
 
   return links;
+}
+
+
+/***********************
+ * GET QUIZZES
+ ***********************/
+
+function getQuizzes_() {
+
+  const ss =
+    SpreadsheetApp.getActiveSpreadsheet();
+
+  const sheet =
+    ss.getSheetByName(QUIZ_SHEET_NAME);
+
+  if (!sheet) {
+
+    return {
+      success: true,
+      quizzes: []
+    };
+  }
+
+  const lastRow =
+    sheet.getLastRow();
+
+  if (lastRow < 2) {
+
+    return {
+      success: true,
+      quizzes: []
+    };
+  }
+
+  const values =
+    sheet
+      .getRange(
+        2,
+        1,
+        lastRow - 1,
+        QUIZ_HEADERS.length
+      )
+      .getDisplayValues();
+
+  const quizzes = values
+    .filter(row => row[0] && row[0].trim() !== '')
+    .map(row => {
+
+      return {
+        name: row[0],
+        link: row[1],
+        status: row[2] || 'LIVE'
+      };
+
+    });
+
+  return {
+    success: true,
+    quizzes: quizzes
+  };
 }
 
 
