@@ -17,6 +17,7 @@ const API = (() => {
     async lectures(module) { return (await request('lectures', { module })).lectures || []; },
     async allLectures() { return Object.values((await request('allLectures')).modules || {}).flat(); },
     async settings() { return (await request('settings')).settings || {}; },
+    async quizzes() { return (await request('quizzes')).quizzes || []; },
     async stats() {
       const stats = await request('stats');
       return { ...stats, uniqueVisitors: stats.todayUniqueVisitors, successfulLogins: stats.totalSuccessfulLogins };
